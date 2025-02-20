@@ -607,9 +607,9 @@ class AAPopupView: UIView, WKNavigationDelegate, WKUIDelegate {
             withDuration: 0.5,
             delay: 0.0,
             options: .curveEaseOut,
-            animations: { [self] in
-                self.webView?.alpha = 1.0
-                setNeedsDisplay()
+            animations: { [weak self] in
+                self?.webView?.alpha = 1.0
+                self?.setNeedsDisplay()
             }) { finished in
             }
     }
@@ -645,12 +645,11 @@ class AAPopupView: UIView, WKNavigationDelegate, WKUIDelegate {
         if didSetupConstraints {
             DispatchQueue.main.async(execute: { [weak self] in
                 guard let self = self else { return }
-                
                 if !self.showHeader || !self.showCloseButton {
-                    removeConstraints(constraints)
+                    self.removeConstraints(self.constraints)
                     if !self.showHeader {
                         if let header = self.header {
-                            addSubview(header)
+                            self.addSubview(header)
                         }
                     }
                     if !self.showCloseButton {
@@ -662,7 +661,7 @@ class AAPopupView: UIView, WKNavigationDelegate, WKUIDelegate {
                     self.showHeader = true
                     self.showCloseButton = true
                     self.didSetupConstraints = false
-                    setNeedsUpdateConstraints()
+                    self.setNeedsUpdateConstraints()
                 }
             })
         }

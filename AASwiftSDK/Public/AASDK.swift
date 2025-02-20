@@ -198,11 +198,6 @@ var _customId: String?
         for string in items ?? [] {
             AASDK.reportItem(string, addedToList: list)
         }
-        do {
-            for string in items ?? [] {
-                AASDK.reportItem(string, addedToList: list)
-            }
-        }
     }
 
     @objc public class func reportItems(_ items: [String], crossedOffList list: String?) {
@@ -708,7 +703,6 @@ var _customId: String?
     func startUpdateTimer() {
         DispatchQueue.main.async(execute: { [weak self] in
             guard let self = self else { return }
-            
             if self.appID != nil && (self.appID?.count ?? 0) > 0 {
                 if self.updateTimer == nil {
                     self.updateTimer = Timer.scheduledTimer(
@@ -757,16 +751,18 @@ var _customId: String?
         request.zoneIds = zoneContexts.getZoneIdsAsString()
         request.contextId = zoneContexts.first?.getContextId() ?? ""
 
-        let responseWasReceivedBlock = { [self] response, forRequest in
+        let responseWasReceivedBlock = { [weak self] response, forRequest in
+            guard let self else { return }
+            
             let updateResponse = response as? AAUpdateAdsResponse
-            pollingIntervalInMS = updateResponse?.pollingIntervalInMS ?? 0
-            recacheAds(updateResponse?.zones)
+            self.pollingIntervalInMS = updateResponse?.pollingIntervalInMS ?? 0
+            self.recacheAds(updateResponse?.zones)
             if (adProvider != nil) {
                 adProvider?.renderNext()
-            } else if backgroundedPastRefresh {
+            } else if self.backgroundedPastRefresh {
                 let notification = Notification(name: NSNotification.Name("app_unbackgrounded"), object: nil)
                 AASDK.postDelayedNotification(notification)
-                backgroundedPastRefresh = false
+                self.backgroundedPastRefresh = false
             }
         } as AAResponseWasReceivedBlock
 
@@ -1257,6 +1253,29 @@ extension AASDK {
             userInfo: dic)
 
         AASDK.logDebugMessage("AASDK: deliverContent:fromAd:andZoneView posting content event", type: DEBUG_USER_INTERACTION)
+        NotificationCenterWrapper.notifier.post(notification)
+    }
+    
+    // MARK: - non-content stuff
+    class func deliverNonContentNotification(from ad: AAAd?, andZoneView zoneView: AAZoneView?) {
+        var dic: [AnyHashable: Any]?
+        
+        if let zoneId = ad?.zoneId, let zoneView = zoneView {
+            dic = [
+                AA_KEY_AD_ID: ad?.adID ?? "",
+                KEY_ZONE_ID: zoneId,
+                KEY_ZONE_VIEW: zoneView
+            ]
+        }
+        
+        AASDK.logDebugMessage("AASDK: deliverNonContent:fromAd:andZoneView enter", type: DEBUG_USER_INTERACTION)
+        
+        let notification = Notification(
+            name: Notification.Name(rawValue: AASDK_NOTIFICATION_NON_CONTENT_DELIVERY),
+            object: nil,
+            userInfo: dic)
+        
+        AASDK.logDebugMessage("AASDK: deliverNonContent:fromAd:andZoneView posting non-content event", type: DEBUG_USER_INTERACTION)
         NotificationCenterWrapper.notifier.post(notification)
     }
 

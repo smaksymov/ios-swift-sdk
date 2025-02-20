@@ -175,8 +175,8 @@ class AAWebAdView: UIView, UIGestureRecognizerDelegate, UIScrollViewDelegate, WK
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        UIView.animate(withDuration: AD_FADE_SECONDS, animations: {
-            self.alpha = 1.0
+        UIView.animate(withDuration: AD_FADE_SECONDS, animations: { [weak self] in
+            self?.alpha = 1.0
         })
         delegate?.webAdLoaded()
     }

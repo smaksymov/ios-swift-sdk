@@ -32,8 +32,11 @@ import WebKit
     private var reportAdView: UIButton = UIButton(type: .custom)
     private var reportAdUrlComponents = URLComponents()
 
-    init(frame: CGRect, forZone zoneId: String?, zoneType type: AdTypeAndSource, delegate: AAZoneViewOwner?) {
+    init(frame: CGRect, forZone zoneId: String?, zoneType type: AdTypeAndSource, delegate: AAZoneViewOwner?, isVisible: Bool) {
         super.init(frame: frame)
+        if(isVisible == false) {
+            setAdZoneVisibility(isViewable: isVisible)
+        }
         setZoneId(zoneId, zoneType: type, delegate: delegate)
         sharedInit()
         AASDK.logDebugFrame(self.frame, message: "AAZoneView \(zoneId ?? "") initWithFrame")
@@ -241,10 +244,10 @@ import WebKit
         if newAdView == nil {
             UIView.animate(
                 withDuration: AD_FADE_SECONDS,
-                animations: { [self] in
-                    currentAdView?.alpha = 0.0
-                }) { [self] finished in
-                    currentAdView?.removeFromSuperview()
+                animations: { [weak self] in
+                    self?.currentAdView?.alpha = 0.0
+                }) { [weak self] finished in
+                    self?.currentAdView?.removeFromSuperview()
                 }
             return
         }
